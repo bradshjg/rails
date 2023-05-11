@@ -9,9 +9,19 @@ module ActiveRecord
         unscoped = association.klass.unscoped
         reverse_chain = get_chain(source_reflection, association, unscoped.alias_tracker).reverse
 
-        last_reflection, last_ordered, last_join_ids = last_scope_chain(reverse_chain, owner)
+        last_reflection = reverse_chain[-1]
+        polymorphic_where = if last_reflection.type
+          { last_reflection.type => reverse_chain[-2].klass.polymorphic_name }
+        end
 
-        add_constraints(last_reflection, last_reflection.join_primary_key, last_join_ids, owner, last_ordered)
+        last_reflection, last_ordered, last_join_ids = last_scope_chain(reverse_chain, owner)
+        scope = add_constraints(last_reflection, last_reflection.join_primary_key, last_join_ids, owner, last_ordered)
+        
+        if polymorphic_where
+          scope.where(**polymorphic_where)
+        else
+          scope
+        end
       end
 
       private
@@ -30,7 +40,7 @@ module ActiveRecord
           end
         end
 
-        def add_constraints(reflection, key, join_ids, owner, ordered)
+        def add_constraints(reflection, key, join_ids, owner, ordered, penultimate_reflection: nil)
           scope = reflection.build_scope(reflection.aliased_table).where(key => join_ids)
 
           relation = reflection.klass.scope_for_association

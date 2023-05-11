@@ -8,6 +8,7 @@ require "models/comment"
 require "models/rating"
 require "models/member"
 require "models/member_type"
+require "models/image"
 
 require "models/pirate"
 require "models/treasure"
@@ -133,6 +134,19 @@ class HasManyThroughDisableJoinsAssociationsTest < ActiveRecord::TestCase
   def test_polymophic_disable_joins_through_counting
     assert_equal 2, assert_queries(1) { @author.ordered_members.count }
     assert_equal 2, assert_queries(3) { @author.no_joins_ordered_members.count }
+  end
+
+  def test_polymophic_disable_joins_TODO
+    colliding_id = 1_000_000
+    post_image = Image.create!
+    comment_image = Image.create!
+    @post.update_columns(id: colliding_id)
+    @post.images << post_image
+    @comment.update_columns(id: colliding_id)
+    @comment.images << comment_image
+
+    assert_equal [post_image], assert_queries(2) { @author.reload.post_images.to_a }
+    assert_equal [post_image], assert_queries(3) { @author.reload.no_joins_post_images.to_a }
   end
 
   def test_polymophic_disable_joins_through_ordering

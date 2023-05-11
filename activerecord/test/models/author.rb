@@ -21,6 +21,9 @@ class Author < ActiveRecord::Base
     end
   end
 
+  has_many :post_images, through: :posts, source: :images
+  has_many :no_joins_post_images, through: :posts, source: :images, disable_joins: true
+
   has_many :comments_with_order, -> { ordered_by_post_id }, through: :posts, source: :comments
   has_many :no_joins_comments, through: :posts, disable_joins: :true, source: :comments
 
