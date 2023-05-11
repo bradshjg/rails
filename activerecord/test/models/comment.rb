@@ -28,6 +28,8 @@ class Comment < ActiveRecord::Base
   has_many :children, class_name: "Comment", inverse_of: :parent
   belongs_to :parent, class_name: "Comment", counter_cache: :children_count, inverse_of: :children
 
+  has_many :images, as: :imageable, foreign_key: :imageable_identifier, foreign_type: :imageable_class
+
   alias_attribute :entry, :post
 
   enum label: [:default, :child]
